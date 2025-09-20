@@ -150,10 +150,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManger
   _cellPrefab: {fileID: 6415051618332488521, guid: 3bd25e47b4ae50444909f9970ed85193, type: 3}
   _gridParent: {fileID: 279250249}
-  _lenght: 6
-  _width: 13
-  _minBomb: 3
-  _maxBomb: 6
+  _lenght: 13
+  _width: 6
+  _minBomb: 6
+  _maxBomb: 15
   _bombNeighbord:
   - {x: 1, y: 0}
   - {x: 0, y: 1}
@@ -163,6 +163,7 @@ MonoBehaviour:
   - {x: -1, y: 1}
   - {x: 1, y: -1}
   - {x: -1, y: -1}
+  _text: []
 --- !u!4 &132725621
 Transform:
   m_ObjectHideFlags: 0

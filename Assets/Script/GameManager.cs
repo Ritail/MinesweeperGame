@@ -5,7 +5,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class GameManger : MonoBehaviour
+public class GameManager : MonoBehaviour
 {
     [Header("Prefabs")]
     [SerializeField] private GameObject _cellPrefab;
@@ -19,6 +19,7 @@ public class GameManger : MonoBehaviour
     [SerializeField] private int _minBomb;
     [SerializeField] private int _maxBomb;
     [SerializeField] private List<Vector2Int> _bombNeighbord = new List<Vector2Int>();
+    [SerializeField] private List<GameObject> _text;
     
     
     private Cell [,] _matrix;
@@ -50,19 +51,19 @@ public class GameManger : MonoBehaviour
                 if (random < 0.2 && bombNumber > 0)
                 { 
                     newPiece = Instantiate(_cellPrefab,_gridParent); 
-                    newPiece.GetComponent<CellHandler>().Setup(new Vector2Int(i,j),"-1"); 
+                    newPiece.GetComponent<CellHandler>().Setup(new Vector2Int(i,j),this); 
                     bombNumber -= 1; 
                     newCell.Value = -1;
-                    newCell.IsBomb = true;
                     newCell.Position = new Vector2Int(i, j);
                 }
                 else
                 {
                     newPiece = Instantiate(_cellPrefab,_gridParent);
-                    newPiece.GetComponent<CellHandler>().Setup(new Vector2Int(i,j), "0");
+                    newPiece.GetComponent<CellHandler>().Setup(new Vector2Int(i,j),this);
                     newCell.Value = 0;
                     newCell.Position = new Vector2Int(i, j);
                 }
+                _text.Add(newPiece);
                 _matrix[i, j] = newCell;
             }
         }
@@ -74,23 +75,80 @@ public class GameManger : MonoBehaviour
         {
             for (int j = 0; j < _matrix.GetLength(1); j++)
             {
-                Cell neighbordPiece; 
-                neighbordPiece = _matrix[i, j];
-                if (neighbordPiece.Value != -1)
+                Cell currentCell = _matrix[i, j];
+
+                if (currentCell.Value != -1)
                 {
+                    int bombCount = 0;
+                    
                     foreach (var neighbord in _bombNeighbord)
                     {
-                        if (neighbordPiece.IsCheckPos(new Vector2Int(i,j),_lenght, _width ))
+                        Vector2Int neighbordPos = new Vector2Int(i + neighbord.x, j + neighbord.y);
+
+                        if (currentCell.IsCheckPos(neighbordPos, _lenght, _width))
                         {
-                            if (_matrix[neighbord.x, neighbord.y].Value == -1 )
+                            if (_matrix[neighbordPos.x, neighbordPos.y].Value == -1)
                             {
-                                neighbordPiece.Value += 1;
+                                bombCount++;
                             }
                         }
                     }
+                    currentCell.Value = bombCount;
                 }
             }
         }
+    }
+
+    public void CellReveal(Vector2Int pos)
+    {
+        Cell currentCell = _matrix[pos.x, pos.y];
+        
+        if (currentCell.IsRevealed) return;
+
+        currentCell.IsRevealed = true;
+        foreach (var text in _text)
+        {
+            if (text.GetComponent<CellHandler>().Position == currentCell.Position)
+            {
+                text.GetComponent<CellHandler>().Reveal(currentCell.Value); 
+            }
+        }
+
+        if (currentCell.Value == -1 )
+        {
+            Defeat();
+            return;
+        }
+
+        if (currentCell.Value > 0) return;
+
+        foreach (var neighbord in _bombNeighbord)
+        {
+            Vector2Int neighbordPos = new Vector2Int(pos.x + neighbord.x, pos.y + neighbord.y);
+
+            if (currentCell.IsCheckPos(neighbordPos, _lenght,_width))
+            {
+                CellReveal(neighbordPos);
+            }
+        }
+    }
+
+    public void Defeat()
+    {
+        Debug.Log("You Loose");
+        Invoke("Restart", 1);
+    }
+
+    private void Restart()
+    {
+        foreach (Transform child in _gridParent.transform)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        _text.Clear();
+        SetupMatrix();
+        FindNeighbord();
     }
     
 }
