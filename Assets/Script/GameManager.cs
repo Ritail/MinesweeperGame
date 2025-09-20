@@ -108,9 +108,10 @@ public class GameManager : MonoBehaviour
         currentCell.IsRevealed = true;
         foreach (var text in _text)
         {
-            if (text.GetComponent<CellHandler>().Position == currentCell.Position)
+            CellHandler currentCellHandler = text.GetComponent<CellHandler>();
+            if (currentCellHandler.Position == currentCell.Position)
             {
-                text.GetComponent<CellHandler>().Reveal(currentCell.Value); 
+                currentCellHandler.Reveal(currentCell.Value); 
             }
         }
 
